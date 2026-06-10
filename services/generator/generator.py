@@ -2,20 +2,9 @@ import random
 import time
 import uuid
 from datetime import datetime
-import psycopg2
 
-from config import PRODUCTS, EVENT_TYPES
-
-
-conn = psycopg2.connect(
-    host="localhost",
-    database="analytics",
-    user="admin",
-    password="admin",
-    port=5432
-)
-
-cur = conn.cursor()
+from services.generator.config import EVENT_TYPES, PRODUCTS
+from services.generator.db import get_conn, init_db
 
 
 def generate_event():
@@ -25,31 +14,33 @@ def generate_event():
         "product": random.choice(PRODUCTS),
         "event_type": random.choice(EVENT_TYPES),
         "price": round(random.uniform(10, 2000), 2),
-        "timestamp": datetime.utcnow()
+        "timestamp": datetime.utcnow(),
     }
 
 
 def insert_event(event):
-    cur.execute("""
-        INSERT INTO events (
-            event_id, user_id, product,
-            event_type, price, timestamp
-        )
-        VALUES (%s,%s,%s,%s,%s,%s)
-    """, (
-        event["event_id"],
-        event["user_id"],
-        event["product"],
-        event["event_type"],
-        event["price"],
-        event["timestamp"]
-    ))
-
-    conn.commit()
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                INSERT INTO events (
+                    event_id, user_id, product,
+                    event_type, price, timestamp
+                )
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (
+                event["event_id"],
+                event["user_id"],
+                event["product"],
+                event["event_type"],
+                event["price"],
+                event["timestamp"],
+            ))
+            conn.commit()
 
 
 def run():
-    print("Streaming to PostgreSQL...")
+    init_db()
+    print("Streaming events to PostgreSQL...")
 
     while True:
         event = generate_event()
