@@ -157,6 +157,13 @@ def get_db_connection() -> Generator[psycopg2.extensions.connection, None, None]
         yield conn
 
 
+@contextmanager
+def get_conn() -> Generator[psycopg2.extensions.connection, None, None]:
+    """Alias for get_db_connection() for backwards compatibility."""
+    with get_db_connection() as conn:
+        yield conn
+
+
 def close_pool() -> None:
     """Close the global connection pool."""
     global _pool
