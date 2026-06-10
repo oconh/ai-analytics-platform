@@ -4,7 +4,14 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from services.api.db import initialize_pool, close_pool, get_db_connection
+from services.api.db import initialize_pool, close_pool
+from services.analytics.queries import (
+    total_events,
+    total_revenue,
+    events_by_product,
+    revenue_by_product,
+    event_distribution,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -39,11 +46,8 @@ app.add_middleware(
 def get_event_count():
     """Get total count of events in the database."""
     try:
-        with get_db_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute("SELECT COUNT(*) FROM events;")
-                result = cur.fetchone()[0]
-                return {"total_events": result}
+        count = total_events()
+        return {"total_events": count}
     except Exception as e:
         logger.error(f"Error fetching event count: {e}")
         return {"error": "Failed to fetch event count", "total_events": 0}
@@ -52,19 +56,8 @@ def get_event_count():
 def top_products():
     """Get top products by event count."""
     try:
-        with get_db_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute("""
-                    SELECT product, COUNT(*) as count
-                    FROM events
-                    GROUP BY product
-                    ORDER BY count DESC;
-                """)
-                result = cur.fetchall()
-                return [
-                    {"product": row[0], "count": row[1]}
-                    for row in result
-                ]
+        products = events_by_product()
+        return products
     except Exception as e:
         logger.error(f"Error fetching top products: {e}")
         return {"error": "Failed to fetch top products"}
@@ -73,15 +66,28 @@ def top_products():
 def revenue():
     """Get total revenue from purchase events."""
     try:
-        with get_db_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute("""
-                    SELECT SUM(price)
-                    FROM events
-                    WHERE event_type = 'purchase';
-                """)
-                result = cur.fetchone()[0] or 0
-                return {"total_revenue": float(result)}
+        rev = total_revenue()
+        return {"total_revenue": rev}
     except Exception as e:
         logger.error(f"Error fetching revenue: {e}")
         return {"error": "Failed to fetch revenue", "total_revenue": 0}
+
+@app.get("/analytics/revenue-by-product")
+def revenue_by_product_endpoint():
+    """Get total revenue grouped by product."""
+    try:
+        revenue = revenue_by_product()
+        return revenue
+    except Exception as e:
+        logger.error(f"Error fetching revenue by product: {e}")
+        return {"error": "Failed to fetch revenue by product"}
+
+@app.get("/analytics/event-distribution")
+def event_distribution_endpoint():
+    """Get event count grouped by event type."""
+    try:
+        distribution = event_distribution()
+        return distribution
+    except Exception as e:
+        logger.error(f"Error fetching event distribution: {e}")
+        return {"error": "Failed to fetch event distribution"}
