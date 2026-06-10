@@ -1,0 +1,53 @@
+<div class="dashboard">
+  <h2>Dashboard Overview</h2>
+
+  <div *ngIf="error" class="error">
+    {{ error }}
+  </div>
+
+  <div *ngIf="loading" class="loading">
+    <p>Loading dashboard data...</p>
+  </div>
+
+  <div *ngIf="!loading" class="metrics-grid">
+    <!-- Event Count Card -->
+    <div class="metric-card">
+      <div class="metric-label">Total Events</div>
+      <div class="metric-value">{{ eventCount | number }}</div>
+    </div>
+
+    <!-- Revenue Card -->
+    <div class="metric-card">
+      <div class="metric-label">Total Revenue</div>
+      <div class="metric-value">${{ totalRevenue | number : '1.2-2' }}</div>
+    </div>
+
+    <!-- Top Products -->
+    <div class="card">
+      <h3>Top Products</h3>
+      <div *ngIf="topProducts.length === 0">
+        <p>No products found</p>
+      </div>
+      <ul *ngIf="topProducts.length > 0" class="product-list">
+        <li *ngFor="let product of topProducts">
+          <span class="product-name">{{ product.product }}</span>
+          <span class="product-count">{{ product.count }} events</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Event Distribution -->
+    <div class="card">
+      <h3>Event Types</h3>
+      <div *ngIf="eventDistribution.length === 0">
+        <p>No events recorded</p>
+      </div>
+      <ul *ngIf="eventDistribution.length > 0" class="distribution-list">
+        <li *ngFor="let event of eventDistribution">
+          <span class="event-type">{{ event.event_type }}</span>
+          <span class="event-count">{{ event.count }}</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>

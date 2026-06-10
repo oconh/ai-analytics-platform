@@ -1,0 +1,19 @@
+<header class="navbar">
+  <div class="container">
+    <h1>{{ title }}</h1>
+    <nav>
+      <a routerLink="/" class="nav-link">Home</a>
+      <a routerLink="/revenue" class="nav-link">Revenue</a>
+      <a routerLink="/products" class="nav-link">Products</a>
+      <a routerLink="/events" class="nav-link">Events</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+  <router-outlet></router-outlet>
+</main>
+
+<footer class="footer">
+  <p>&copy; 2026 Analytics Platform. All rights reserved.</p>
+</footer>
